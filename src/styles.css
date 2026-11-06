@@ -89,6 +89,7 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;z-index:30;max-width:90vw}
 .top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;max-width:100%}
 .install-app{white-space:nowrap}
+.mobile-out{display:none;white-space:nowrap}
 .login-install{margin-top:10px}
 .login-install .install-app{width:100%;min-height:44px}
 .install-help{position:fixed;top:82px;right:20px;z-index:25;width:min(360px,calc(100vw - 24px));padding:18px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 36px rgba(15,23,42,.2)}
@@ -139,6 +140,8 @@ button{touch-action:manipulation}
   .top{align-items:flex-start;margin-bottom:16px}
   .top-actions{width:100%;justify-content:space-between;flex-wrap:wrap}
   .who{max-width:100%;flex-wrap:wrap}
+  .side-out{display:none}
+  .mobile-out{display:inline-flex;align-items:center;min-height:40px}
   .two,.calendar-layout{grid-template-columns:minmax(0,1fr)}
   .calendar-layout>.card{min-width:0}
   .day{min-height:48px}

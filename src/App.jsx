@@ -157,7 +157,7 @@ export default function App() {
       <main>
         <header className="top">
           <div><h1>{sec[2]}</h1><div className="sub">{sec[3]}</div></div>
-          <div className="top-actions"><InstallAppButton /><div className="who"><span>{me.full_name}</span><span className="chip t-ind">{me.role}</span></div></div>
+          <div className="top-actions"><InstallAppButton /><div className="who"><span>{me.full_name}</span><span className="chip t-ind">{me.role}</span></div><button className="btn sm ghost mobile-out" onClick={logout}>Sign out</button></div>
         </header>
         {DEMO && <div className="banner">Demo mode: data is kept only in this browser. Copy .env.example to .env, add your Supabase credentials, and restart the server to go live.</div>}
         <Page ctx={ctx} />
