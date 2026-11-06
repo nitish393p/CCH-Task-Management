@@ -114,10 +114,12 @@ drop policy if exists "profiles: read all" on profiles;
 drop policy if exists "profiles: director updates" on profiles;
 drop policy if exists "tasks: read own or manager" on tasks;
 drop policy if exists "tasks: manager insert" on tasks;
+drop policy if exists "employee_insert_own_task" on tasks;
 drop policy if exists "tasks: manager update" on tasks;
 drop policy if exists "tasks: manager delete" on tasks;
 drop policy if exists "assignees: read all" on task_assignees;
 drop policy if exists "assignees: manager insert" on task_assignees;
+drop policy if exists "employee_self_insert_task_assignee" on task_assignees;
 drop policy if exists "assignees: manager delete" on task_assignees;
 drop policy if exists "attendance: read own or manager" on attendance;
 drop policy if exists "attendance: insert own or manager" on attendance;
@@ -136,11 +138,29 @@ grant update (last_reminder) on table public.profiles to authenticated;
 create policy "tasks: read own or manager" on tasks for select to authenticated
   using (is_manager() or created_by = auth.uid() or is_assignee(id));
 create policy "tasks: manager insert" on tasks for insert to authenticated with check (is_manager());
+create policy "employee_insert_own_task" on tasks for insert to authenticated
+  with check (
+    created_by = (select auth.uid())
+    and type = 'Individual'
+    and status = 'To Do'
+    and not (select is_manager())
+    and (select is_active_user())
+  );
 create policy "tasks: manager update" on tasks for update to authenticated using (is_manager()) with check (is_manager());
 create policy "tasks: manager delete" on tasks for delete to authenticated using (is_manager());
 
 create policy "assignees: read all" on task_assignees for select to authenticated using (true);
 create policy "assignees: manager insert" on task_assignees for insert to authenticated with check (is_manager());
+create policy "employee_self_insert_task_assignee" on task_assignees for insert to authenticated
+  with check (
+    user_id = (select auth.uid())
+    and exists (
+      select 1 from tasks
+      where tasks.id = task_assignees.task_id
+        and tasks.created_by = (select auth.uid())
+        and tasks.type = 'Individual'
+    )
+  );
 create policy "assignees: manager delete" on task_assignees for delete to authenticated using (is_manager());
 
 create policy "attendance: read own or manager" on attendance for select to authenticated

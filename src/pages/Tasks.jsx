@@ -6,6 +6,7 @@ import { Avatar, Chip } from "../components/parts";
 
 export default function Tasks({ ctx }) {
   const { me, data, isMgr, open, taskFilter, setTaskFilter } = ctx;
+  const canCreateTask = isMgr || me.role === "Employee";
   const tasks = data.tasks.map((t) => taskForDate(t, TODAY));
   const list = tasks.filter((task) => {
     const matchesType = taskFilter.type === "All" || task.type === taskFilter.type;
@@ -30,7 +31,7 @@ export default function Tasks({ ctx }) {
             ))}
           </div>
         </div>
-        {isMgr && <button className="btn" onClick={() => open(<TaskForm ctx={ctx} />)}>+ New task</button>}
+        {canCreateTask && <button className="btn" onClick={() => open(<TaskForm ctx={ctx} />)}>{isMgr ? "+ New task" : "+ Add task"}</button>}
       </div>
       {list.length
         ? <div className="cards">{list.map((t) => <TaskCard key={t.id} t={t} ctx={ctx} canEdit={isMgr || assigneesOf(t).includes(me.id)} />)}</div>
@@ -110,10 +111,10 @@ function TaskReminder({ ctx, task }) {
 }
 
 function TaskForm({ ctx }) {
-  const { data, run, close, toast } = ctx;
+  const { me, data, isMgr, run, close, toast } = ctx;
   const [title, setTitle] = useState("");
   const [type, setType] = useState("Individual");
-  const [one, setOne] = useState(data.profiles[0]?.id || "");
+  const [one, setOne] = useState(isMgr ? data.profiles[0]?.id || "" : me.id);
   const [group, setGroup] = useState([]);
   const [priority, setPriority] = useState("Medium");
   const [due, setDue] = useState(dayKey(3));
@@ -121,11 +122,12 @@ function TaskForm({ ctx }) {
   const toggle = (id) => setGroup((g) => (g.includes(id) ? g.filter((x) => x !== id) : [...g, id]));
 
   const save = () => {
-    const ids = type === "Individual" ? [one] : group;
+    const taskType = isMgr ? type : "Individual";
+    const ids = isMgr ? (taskType === "Individual" ? [one] : group) : [me.id];
     if (!title.trim()) return toast("Enter a title");
     if (!ids.length) return toast("Select at least one member");
     run(async () => {
-      await api.createTask({ title: title.trim(), type, priority, due, repeat_daily: repeatDaily }, ids);
+      await api.createTask({ title: title.trim(), type: taskType, priority, due, repeat_daily: repeatDaily }, ids);
       close();
     }, "Task created");
   };
@@ -134,23 +136,29 @@ function TaskForm({ ctx }) {
     <>
       <h2>New task</h2>
       <div className="field"><label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-      <div className="field"><label>Type</label>
-        <select value={type} onChange={(e) => setType(e.target.value)}><option>Individual</option><option>Group</option></select>
-      </div>
-      {type === "Individual" ? (
-        <div className="field"><label>Assign to</label>
-          <select value={one} onChange={(e) => setOne(e.target.value)}>
-            {data.profiles.map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
-          </select>
-        </div>
-      ) : (
-        <div className="field"><label>Group members</label>
-          <div className="checks">
-            {data.profiles.map((m) => (
-              <label key={m.id}><input type="checkbox" checked={group.includes(m.id)} onChange={() => toggle(m.id)} /> {m.full_name}</label>
-            ))}
+      {isMgr ? (
+        <>
+          <div className="field"><label>Type</label>
+            <select value={type} onChange={(e) => setType(e.target.value)}><option>Individual</option><option>Group</option></select>
           </div>
-        </div>
+          {type === "Individual" ? (
+            <div className="field"><label>Assign to</label>
+              <select value={one} onChange={(e) => setOne(e.target.value)}>
+                {data.profiles.map((m) => <option key={m.id} value={m.id}>{m.full_name}</option>)}
+              </select>
+            </div>
+          ) : (
+            <div className="field"><label>Group members</label>
+              <div className="checks">
+                {data.profiles.map((m) => (
+                  <label key={m.id}><input type="checkbox" checked={group.includes(m.id)} onChange={() => toggle(m.id)} /> {m.full_name}</label>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="banner">This personal task will be assigned only to you.</div>
       )}
       <div className="row" style={{ gap: 12 }}>
         <div className="field" style={{ flex: 1 }}><label>Priority</label>

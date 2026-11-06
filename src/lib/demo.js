@@ -83,8 +83,12 @@ export const demo = {
     });
   },
   async createTask(task, assignees) {
-    const p = me(); need(isMgr(p));
-    db.tasks.push({ id: Date.now(), ...task, status: "To Do", created_by: p.id, task_assignees: assignees.map((u) => ({ user_id: u })) });
+    const p = me();
+    const manager = isMgr(p);
+    need(manager || p?.role === "Employee");
+    const taskType = manager ? task.type : "Individual";
+    const taskAssignees = manager ? assignees : [p.id];
+    db.tasks.push({ id: Date.now(), ...task, type: taskType, status: "To Do", created_by: p.id, task_assignees: taskAssignees.map((u) => ({ user_id: u })) });
     return wait(true);
   },
   async setStatus(id, s) {
