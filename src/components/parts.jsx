@@ -1,7 +1,11 @@
 import { assigneesOf, colorFor, initials, isOverdue, nameOf } from "../lib/helpers";
 
-export function Stat({ n, l, c = "" }) {
-  return (<div className="card stat"><div className="num" style={{ color: c }}>{n}</div><div className="meta">{l}</div></div>);
+export function Stat({ n, l, c = "", onClick, active = false }) {
+  const content = <><div className="num" style={{ color: c }}>{n}</div><div className="meta">{l}</div></>;
+  if (onClick) {
+    return <button type="button" className={`card stat stat-button${active ? " active" : ""}`} onClick={onClick} aria-pressed={active}>{content}</button>;
+  }
+  return <div className="card stat">{content}</div>;
 }
 export function Chip({ cls = "", children }) {
   return <span className={`chip ${cls}`}>{children}</span>;

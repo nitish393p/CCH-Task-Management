@@ -4,7 +4,7 @@ import { TODAY, fmtTime, nowTime, isOverdue, taskForDate } from "../lib/helpers"
 import { Stat, TaskList } from "../components/parts";
 
 export default function Dashboard({ ctx }) {
-  const { me, data, isMgr, run, go } = ctx;
+  const { me, data, isMgr, run, showTasks, taskFilter } = ctx;
   const [now, setNow] = useState(nowTime());
   useEffect(() => { const t = setInterval(() => setNow(nowTime()), 30000); return () => clearInterval(t); }, []);
 
@@ -19,6 +19,7 @@ export default function Dashboard({ ctx }) {
   const upcoming = data.holidays.filter((h) => h.holiday_date >= TODAY).slice(0, 3);
   const done = tasks.filter((t) => t.status === "Done").length;
   const over = tasks.filter(isOverdue).length;
+  const todo = tasks.filter((t) => t.status === "To Do").length;
 
   let msg = "You have not clocked in yet";
   if (mine?.on_leave) msg = "You are on leave today";
@@ -44,14 +45,15 @@ export default function Dashboard({ ctx }) {
         </div>
       </div>
       <div className="grid4">
-        <Stat n={tasks.length} l="Tasks" />
-        <Stat n={done} l="Completed" c="var(--ok)" />
-        <Stat n={over} l="Overdue" c="var(--bad)" />
+        <Stat n={tasks.length} l="Tasks" onClick={() => showTasks("All")} active={taskFilter.status === "All"} />
+        <Stat n={done} l="Completed" c="var(--ok)" onClick={() => showTasks("Done")} active={taskFilter.status === "Done"} />
+        <Stat n={over} l="Overdue" c="var(--bad)" onClick={() => showTasks("Overdue")} active={taskFilter.status === "Overdue"} />
+        <Stat n={todo} l="To Do" onClick={() => showTasks("To Do")} active={taskFilter.status === "To Do"} />
         {isMgr ? <Stat n={`${present}/${data.profiles.length}`} l="Present today" /> : <Stat n={upcoming.length} l="Upcoming holidays" />}
       </div>
       <div className="two">
         <div className="card">
-          <div className="row between"><b>Recent tasks</b><button className="btn sm ghost" onClick={() => go("tasks")}>View all</button></div>
+          <div className="row between"><b>Recent tasks</b><button className="btn sm ghost" onClick={() => showTasks("All")}>View all</button></div>
           <TaskList tasks={recentTasks} members={data.profiles} />
         </div>
         <div className="card">

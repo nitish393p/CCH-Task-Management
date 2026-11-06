@@ -5,21 +5,36 @@ import { shareByGmail, shareByWhatsApp } from "../lib/sharing";
 import { Avatar, Chip } from "../components/parts";
 
 export default function Tasks({ ctx }) {
-  const { me, data, isMgr, open } = ctx;
-  const [tab, setTab] = useState("Individual");
-  const list = data.tasks.map((t) => taskForDate(t, TODAY)).filter((t) => t.type === tab);
+  const { me, data, isMgr, open, taskFilter, setTaskFilter } = ctx;
+  const tasks = data.tasks.map((t) => taskForDate(t, TODAY));
+  const list = tasks.filter((task) => {
+    const matchesType = taskFilter.type === "All" || task.type === taskFilter.type;
+    const matchesStatus = taskFilter.status === "All"
+      || (taskFilter.status === "Overdue" ? isOverdue(task) : task.status === taskFilter.status);
+    return matchesType && matchesStatus;
+  });
+  const statusTabs = [["All", "All"], ["To Do", "To Do"], ["Done", "Completed"], ["Overdue", "Overdue"]];
+  const typeTabs = ["All", "Individual", "Group"];
   return (
     <>
-      <div className="row between" style={{ marginBottom: 16 }}>
-        <div className="seg">
-          <button className={tab === "Individual" ? "on" : ""} onClick={() => setTab("Individual")}>👤 Individual</button>
-          <button className={tab === "Group" ? "on" : ""} onClick={() => setTab("Group")}>👥 Group</button>
+      <div className="row between task-filters" style={{ marginBottom: 16 }}>
+        <div className="task-filter-groups">
+          <div className="seg" aria-label="Filter by task status">
+            {statusTabs.map(([value, label]) => (
+              <button key={value} className={taskFilter.status === value ? "on" : ""} aria-pressed={taskFilter.status === value} onClick={() => setTaskFilter((current) => ({ ...current, status: value }))}>{label}</button>
+            ))}
+          </div>
+          <div className="seg" aria-label="Filter by task type">
+            {typeTabs.map((type) => (
+              <button key={type} className={taskFilter.type === type ? "on" : ""} aria-pressed={taskFilter.type === type} onClick={() => setTaskFilter((current) => ({ ...current, type }))}>{type === "Individual" ? "👤 Individual" : type === "Group" ? "👥 Group" : type}</button>
+            ))}
+          </div>
         </div>
         {isMgr && <button className="btn" onClick={() => open(<TaskForm ctx={ctx} />)}>+ New task</button>}
       </div>
       {list.length
         ? <div className="cards">{list.map((t) => <TaskCard key={t.id} t={t} ctx={ctx} canEdit={isMgr || assigneesOf(t).includes(me.id)} />)}</div>
-        : <div className="card empty">No {tab.toLowerCase()} tasks.</div>}
+        : <div className="card empty">No {taskFilter.status === "All" ? "" : `${taskFilter.status === "Done" ? "completed" : taskFilter.status.toLowerCase()} `}{taskFilter.type === "All" ? "" : `${taskFilter.type.toLowerCase()} `}tasks.</div>}
     </>
   );
 }

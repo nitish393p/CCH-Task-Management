@@ -36,6 +36,9 @@ select:focus,input:focus,textarea:focus{border-color:var(--p);box-shadow:0 0 0 3
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:0}
 .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
 .stat .num{font-size:28px;font-weight:800}
+.stat-button{display:block;font:inherit;color:inherit;text-align:left;width:100%;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.stat-button:hover,.stat-button.active{border-color:var(--p);box-shadow:0 0 0 2px rgba(79,70,229,.12)}
+.stat-button:focus-visible{outline:3px solid rgba(79,70,229,.35);outline-offset:2px}
 .two{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
@@ -53,6 +56,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--p);box-shadow:0 0 0 3
 .seg{display:inline-flex;background:#e9edf7;padding:4px;border-radius:12px;gap:4px}
 .seg button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.task-filter-groups{display:flex;flex-direction:column;gap:8px;min-width:0}
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
 th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}

@@ -78,6 +78,7 @@ export default function App() {
   const [data, setData] = useState(EMPTY);
   const [booting, setBooting] = useState(true);
   const [view, setView] = useState("dashboard");
+  const [taskFilter, setTaskFilter] = useState({ status: "All", type: "Individual" });
   const [modal, setModal] = useState(null);
   const [msg, setMsg] = useState("");
 
@@ -100,7 +101,7 @@ export default function App() {
   }, [reload, toast]);
   const logout = async () => {
     await api.signOut();
-    setMe(null); setData(EMPTY); setView("dashboard"); setModal(null);
+    setMe(null); setData(EMPTY); setView("dashboard"); setTaskFilter({ status: "All", type: "Individual" }); setModal(null);
   };
 
   useEffect(() => {
@@ -133,12 +134,16 @@ export default function App() {
   }
 
   const ctx = {
-    me, data, reload, run, toast,
+    me, data, reload, run, toast, taskFilter, setTaskFilter,
     isMgr: ["Director", "Manager"].includes(me.role),
     isDir: me.role === "Director",
     open: (el) => setModal(el),
     close: () => setModal(null),
     go: setView,
+    showTasks: (status) => {
+      setTaskFilter({ status, type: "All" });
+      setView("tasks");
+    },
   };
   const Page = PAGES[view];
   const sec = SECTIONS.find((s) => s[0] === view);
