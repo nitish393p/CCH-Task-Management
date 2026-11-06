@@ -12,8 +12,10 @@ export default function Tasks({ ctx }) {
     const matchesType = taskFilter.type === "All" || task.type === taskFilter.type;
     const matchesStatus = taskFilter.status === "All"
       || (taskFilter.status === "Overdue" ? isOverdue(task) : task.status === taskFilter.status);
-    return matchesType && matchesStatus;
+    const matchesAssignee = !isMgr || !taskFilter.assigneeId || assigneesOf(task).includes(taskFilter.assigneeId);
+    return matchesType && matchesStatus && matchesAssignee;
   });
+  const selectedMember = data.profiles.find((profile) => profile.id === taskFilter.assigneeId);
   const statusTabs = [["All", "All"], ["To Do", "To Do"], ["Done", "Completed"], ["Overdue", "Overdue"]];
   const typeTabs = ["All", "Individual", "Group"];
   return (
@@ -30,12 +32,25 @@ export default function Tasks({ ctx }) {
               <button key={type} className={taskFilter.type === type ? "on" : ""} aria-pressed={taskFilter.type === type} onClick={() => setTaskFilter((current) => ({ ...current, type }))}>{type === "Individual" ? "👤 Individual" : type === "Group" ? "👥 Group" : type}</button>
             ))}
           </div>
+          {isMgr && (
+            <label className="task-member-filter">
+              <span className="meta">Assigned to</span>
+              <select
+                aria-label="Filter tasks by team member"
+                value={taskFilter.assigneeId}
+                onChange={(event) => setTaskFilter((current) => ({ ...current, assigneeId: event.target.value }))}
+              >
+                <option value="">All team members</option>
+                {data.profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.full_name}</option>)}
+              </select>
+            </label>
+          )}
         </div>
         {canCreateTask && <button className="btn" onClick={() => open(<TaskForm ctx={ctx} />)}>{isMgr ? "+ New task" : "+ Add task"}</button>}
       </div>
       {list.length
         ? <div className="cards">{list.map((t) => <TaskCard key={t.id} t={t} ctx={ctx} canEdit={isMgr || assigneesOf(t).includes(me.id)} />)}</div>
-        : <div className="card empty">No {taskFilter.status === "All" ? "" : `${taskFilter.status === "Done" ? "completed" : taskFilter.status.toLowerCase()} `}{taskFilter.type === "All" ? "" : `${taskFilter.type.toLowerCase()} `}tasks.</div>}
+        : <div className="card empty">No {taskFilter.status === "All" ? "" : `${taskFilter.status === "Done" ? "completed" : taskFilter.status.toLowerCase()} `}{taskFilter.type === "All" ? "" : `${taskFilter.type.toLowerCase()} `}tasks{selectedMember ? ` assigned to ${selectedMember.full_name}` : ""}.</div>}
     </>
   );
 }

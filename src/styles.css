@@ -40,6 +40,9 @@ select:focus,input:focus,textarea:focus{border-color:var(--p);box-shadow:0 0 0 3
 .stat-button:hover,.stat-button.active{border-color:var(--p);box-shadow:0 0 0 2px rgba(79,70,229,.12)}
 .stat-button:focus-visible{outline:3px solid rgba(79,70,229,.35);outline-offset:2px}
 .two{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.dashboard-task-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.dashboard-member-filter,.task-member-filter{display:flex;flex-direction:column;gap:4px}
+.dashboard-member-filter select,.task-member-filter select{width:min(220px,70vw);padding:8px 10px}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .between{justify-content:space-between}
@@ -147,6 +150,8 @@ button{touch-action:manipulation}
   .side-out{display:none}
   .mobile-out{display:inline-flex;align-items:center;min-height:40px}
   .two,.calendar-layout{grid-template-columns:minmax(0,1fr)}
+  .dashboard-task-heading{flex-wrap:wrap}
+  .dashboard-task-heading>.row{flex-wrap:wrap;justify-content:flex-end}
   .calendar-layout>.card{min-width:0}
   .day{min-height:48px}
   .modal-bg{align-items:flex-start;overflow-y:auto}

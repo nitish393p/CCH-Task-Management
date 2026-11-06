@@ -65,7 +65,7 @@ Run `npm run build`; the `dist/` folder is the website. Host it on Netlify, Verc
 
 ## Roles
 - **Director:** everything, including creating users, resetting passwords, and sending reminders.
-- **Manager:** creates individual and group tasks, manages holidays, marks leave, sees the whole team's attendance.
+- **Manager:** creates individual and group tasks, filters dashboard and task lists by assignee, manages holidays, marks leave, sees the whole team's attendance.
 - **Employee:** creates personal tasks assigned only to themselves, clocks in and out, sees their own tasks, and updates their task status.
 
 ## Notes

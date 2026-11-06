@@ -78,7 +78,7 @@ export default function App() {
   const [data, setData] = useState(EMPTY);
   const [booting, setBooting] = useState(true);
   const [view, setView] = useState("dashboard");
-  const [taskFilter, setTaskFilter] = useState({ status: "All", type: "Individual" });
+  const [taskFilter, setTaskFilter] = useState({ status: "All", type: "Individual", assigneeId: "" });
   const [modal, setModal] = useState(null);
   const [msg, setMsg] = useState("");
 
@@ -101,7 +101,7 @@ export default function App() {
   }, [reload, toast]);
   const logout = async () => {
     await api.signOut();
-    setMe(null); setData(EMPTY); setView("dashboard"); setTaskFilter({ status: "All", type: "Individual" }); setModal(null);
+    setMe(null); setData(EMPTY); setView("dashboard"); setTaskFilter({ status: "All", type: "Individual", assigneeId: "" }); setModal(null);
   };
 
   useEffect(() => {
@@ -140,8 +140,8 @@ export default function App() {
     open: (el) => setModal(el),
     close: () => setModal(null),
     go: setView,
-    showTasks: (status) => {
-      setTaskFilter({ status, type: "All" });
+    showTasks: (status, assigneeId = "") => {
+      setTaskFilter({ status, type: "All", assigneeId });
       setView("tasks");
     },
   };
