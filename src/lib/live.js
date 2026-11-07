@@ -9,9 +9,9 @@ const checkTaskSchema = (error) => {
   if (!error) return;
   if (
     ["PGRST202", "PGRST204"].includes(error.code) &&
-    /repeat_daily|set_task_status/i.test(error.message)
+    /repeat_daily|set_task_status|description/i.test(error.message)
   ) {
-    throw new Error("The Supabase database is missing the daily-task schema update. Run the latest supabase/schema.sql in the Supabase SQL Editor. If you already ran it, run NOTIFY pgrst, 'reload schema'; then reload the app.");
+    throw new Error("The Supabase database is missing a required task schema update. Run the latest supabase/schema.sql in the Supabase SQL Editor. If already applied, run NOTIFY pgrst, 'reload schema'; then reload the app.");
   }
   check(error);
 };
@@ -131,6 +131,10 @@ export const live = {
     const { data, error } = await sb.from("tasks").insert({ ...task, created_by: await myId() }).select().single();
     checkTaskSchema(error);
     check((await sb.from("task_assignees").insert(assignees.map((u) => ({ task_id: data.id, user_id: u })))).error);
+  },
+  async updateTaskDescription(id, description) {
+    const { error } = await sb.from("tasks").update({ description }).eq("id", id).select("id").single();
+    checkTaskSchema(error);
   },
   async setStatus(id, s) { checkTaskSchema((await sb.rpc("set_task_status", { tid: id, s, task_day: TODAY })).error); },
   async deleteTask(id) { check((await sb.from("tasks").delete().eq("id", id)).error); },

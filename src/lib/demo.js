@@ -12,10 +12,10 @@ const db = {
     { id: "u5", login_id: "arjun.mehta", full_name: "Arjun Mehta", role: "Employee", dept: "Legal Liaison", phone: "", email: "arjun@cchl.example", must_reset: false, last_reminder: null, pwd: PWD },
   ],
   tasks: [
-    { id: 1, title: "Review complaint #CC-2041 (UPI fraud)", type: "Individual", priority: "High", status: "In Progress", due: dayKey(1), created_by: "u2", task_assignees: [{ user_id: "u2" }] },
-    { id: 2, title: "Trace suspicious phishing domains", type: "Individual", priority: "High", status: "To Do", due: dayKey(-2), created_by: "u2", task_assignees: [{ user_id: "u3" }] },
-    { id: 3, title: "Call back 12 pending helpline cases", type: "Individual", priority: "Medium", status: "In Progress", due: TODAY, created_by: "u2", task_assignees: [{ user_id: "u4" }] },
-    { id: 4, title: "Quarterly cyber-awareness drive", type: "Group", priority: "Medium", status: "In Progress", due: dayKey(5), created_by: "u2", task_assignees: [{ user_id: "u2" }, { user_id: "u3" }, { user_id: "u4" }] },
+    { id: 1, title: "Review complaint #CC-2041 (UPI fraud)", description: "Review the complaint details and prepare the initial case summary.", type: "Individual", priority: "High", status: "In Progress", due: dayKey(1), created_by: "u2", task_assignees: [{ user_id: "u2" }] },
+    { id: 2, title: "Trace suspicious phishing domains", description: "Check domain registration records and document related indicators.", type: "Individual", priority: "High", status: "To Do", due: dayKey(-2), created_by: "u2", task_assignees: [{ user_id: "u3" }] },
+    { id: 3, title: "Call back 12 pending helpline cases", description: "Contact each caller and update the case notes after follow-up.", type: "Individual", priority: "Medium", status: "In Progress", due: TODAY, created_by: "u2", task_assignees: [{ user_id: "u4" }] },
+    { id: 4, title: "Quarterly cyber-awareness drive", description: "Prepare materials and coordinate the awareness sessions.", type: "Group", priority: "Medium", status: "In Progress", due: dayKey(5), created_by: "u2", task_assignees: [{ user_id: "u2" }, { user_id: "u3" }, { user_id: "u4" }] },
     { id: 5, title: "Police referral case file", type: "Group", priority: "High", status: "To Do", due: dayKey(3), created_by: "u2", task_assignees: [{ user_id: "u3" }, { user_id: "u5" }] },
     { id: 6, title: "Monthly awareness webinar slides", type: "Individual", priority: "Low", status: "Done", due: dayKey(-1), created_by: "u2", task_assignees: [{ user_id: "u2" }] },
   ],
@@ -89,6 +89,13 @@ export const demo = {
     const taskType = manager ? task.type : "Individual";
     const taskAssignees = manager ? assignees : [p.id];
     db.tasks.push({ id: Date.now(), ...task, type: taskType, status: "To Do", created_by: p.id, task_assignees: taskAssignees.map((u) => ({ user_id: u })) });
+    return wait(true);
+  },
+  async updateTaskDescription(id, description) {
+    const p = me();
+    const task = db.tasks.find((item) => item.id === id);
+    need(task && (isMgr(p) || task.created_by === p?.id || task.task_assignees.some((assignee) => assignee.user_id === p?.id)));
+    task.description = description;
     return wait(true);
   },
   async setStatus(id, s) {

@@ -49,13 +49,19 @@ export default function Tasks({ ctx }) {
         {canCreateTask && <button className="btn" onClick={() => open(<TaskForm ctx={ctx} />)}>{isMgr ? "+ New task" : "+ Add task"}</button>}
       </div>
       {list.length
-        ? <div className="cards">{list.map((t) => <TaskCard key={t.id} t={t} ctx={ctx} canEdit={isMgr || assigneesOf(t).includes(me.id)} />)}</div>
+        ? <div className="cards">{list.map((t) => <TaskCard
+          key={t.id}
+          t={t}
+          ctx={ctx}
+          canEdit={isMgr || assigneesOf(t).includes(me.id)}
+          canEditDescription={isMgr || t.created_by === me.id || assigneesOf(t).includes(me.id)}
+        />)}</div>
         : <div className="card empty">No {taskFilter.status === "All" ? "" : `${taskFilter.status === "Done" ? "completed" : taskFilter.status.toLowerCase()} `}{taskFilter.type === "All" ? "" : `${taskFilter.type.toLowerCase()} `}tasks{selectedMember ? ` assigned to ${selectedMember.full_name}` : ""}.</div>}
     </>
   );
 }
 
-function TaskCard({ t, ctx, canEdit }) {
+function TaskCard({ t, ctx, canEdit, canEditDescription }) {
   const { data, isMgr, run, open } = ctx;
   const pc = { High: "p-high", Medium: "p-med", Low: "p-low" }[t.priority];
   const sc = { "To Do": "s-todo", "In Progress": "s-prog", Done: "s-done" }[t.status];
@@ -69,6 +75,7 @@ function TaskCard({ t, ctx, canEdit }) {
         <Chip cls={pc}>{t.priority}</Chip>
       </div>
       <div className="title" style={{ marginTop: 10, ...(t.status === "Done" ? { textDecoration: "line-through", opacity: 0.6 } : {}) }}>{t.title}</div>
+      <div className="task-description">{t.description || "No description added."}</div>
       <div className="row between">
         <div className="avatars">{assigneesOf(t).map((id) => <Avatar key={id} id={id} members={data.profiles} />)}</div>
         <span className={`meta ${isOverdue(t) ? "overdue" : ""}`}>Due {t.due}</span>
@@ -84,6 +91,9 @@ function TaskCard({ t, ctx, canEdit }) {
           {canEdit && (
             <button className="btn sm ghost" onClick={() => open(<TaskReminder ctx={ctx} task={t} />)}>🔔 Remind</button>
           )}
+          {canEditDescription && (
+            <button className="btn sm ghost" onClick={() => open(<TaskDescriptionEditor ctx={ctx} task={t} />)}>{t.description ? "Edit description" : "Add description"}</button>
+          )}
           {isMgr && (
             <button className="btn sm ghost" onClick={() => { if (window.confirm("Delete this task?")) run(() => api.deleteTask(t.id), "Task deleted"); }}>Delete</button>
           )}
@@ -93,10 +103,49 @@ function TaskCard({ t, ctx, canEdit }) {
   );
 }
 
+function TaskDescriptionEditor({ ctx, task }) {
+  const { close, reload, toast } = ctx;
+  const [description, setDescription] = useState(task.description || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const save = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      await api.updateTaskDescription(task.id, description.trim());
+      await reload();
+      toast("Task description updated");
+      close();
+    } catch (e) {
+      setError(e.message || "Could not update task description.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <h2>Edit task description</h2>
+      <div className="banner">{task.title}</div>
+      <div className="field">
+        <label htmlFor="edit-task-description">Description</label>
+        <textarea id="edit-task-description" rows="4" maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} />
+        <span className="meta">{description.length}/500 characters</span>
+      </div>
+      {error && <div className="err" role="alert">{error}</div>}
+      <div className="actions">
+        <button className="btn ghost" onClick={close} disabled={saving}>Cancel</button>
+        <button className="btn" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save description"}</button>
+      </div>
+    </>
+  );
+}
+
 function TaskReminder({ ctx, task }) {
   const { data, close, toast } = ctx;
   const assignees = assigneesOf(task).map((id) => data.profiles.find((profile) => profile.id === id)).filter(Boolean);
-  const message = `Hello {name},\n\nReminder from Cyber Crime Helpline LLP about your task:\n${task.title}\nDue date: ${task.due}\nPriority: ${task.priority}\nStatus: ${task.status}\n\nPlease update the task in the Task Manager.`;
+  const message = `Hello {name},\n\nReminder from Cyber Crime Helpline LLP about your task:\n${task.title}${task.description ? `\nDescription: ${task.description}` : ""}\nDue date: ${task.due}\nPriority: ${task.priority}\nStatus: ${task.status}\n\nPlease update the task in the Task Manager.`;
   const sendEmail = (person) => {
     try { shareByGmail(person.email === "-" ? "" : person.email, `Task reminder: ${task.title}`, message.replace("{name}", person.full_name)); }
     catch (e) { toast(e.message); }
@@ -128,6 +177,7 @@ function TaskReminder({ ctx, task }) {
 function TaskForm({ ctx }) {
   const { me, data, isMgr, run, close, toast } = ctx;
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [type, setType] = useState("Individual");
   const [one, setOne] = useState(isMgr ? data.profiles[0]?.id || "" : me.id);
   const [group, setGroup] = useState([]);
@@ -142,7 +192,7 @@ function TaskForm({ ctx }) {
     if (!title.trim()) return toast("Enter a title");
     if (!ids.length) return toast("Select at least one member");
     run(async () => {
-      await api.createTask({ title: title.trim(), type: taskType, priority, due, repeat_daily: repeatDaily }, ids);
+      await api.createTask({ title: title.trim(), description: description.trim(), type: taskType, priority, due, repeat_daily: repeatDaily }, ids);
       close();
     }, "Task created");
   };
@@ -151,6 +201,11 @@ function TaskForm({ ctx }) {
     <>
       <h2>New task</h2>
       <div className="field"><label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+      <div className="field">
+        <label htmlFor="new-task-description">Description (optional)</label>
+        <textarea id="new-task-description" rows="3" maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Briefly describe what needs to be done" />
+        <span className="meta">{description.length}/500 characters</span>
+      </div>
       {isMgr ? (
         <>
           <div className="field"><label>Type</label>

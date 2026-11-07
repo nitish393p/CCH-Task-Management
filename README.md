@@ -2,6 +2,8 @@
 
 A web app for Cyber Crime Helpline LLP: Login ID sign-in, Director-created accounts, password reset, reminders, individual and group tasks (including daily repeating tasks), office in/out attendance with leave, holidays, and a calendar.
 
+Tasks support an optional short description (up to 500 characters). Managers, Directors, and assigned team members can edit a task description later.
+
 The production site is installable on supported phones and desktops as **CCH Task Manager**. Use **Install app** on the sign-in page or in the app header. Chrome/Edge can install directly; on iPhone/iPad, open the site in Safari, tap Share, then **Add to Home Screen**. Installed shortcuts open the hosted app; working with live data still requires an internet connection.
 
 ## Quick start (demo mode, no database needed)
@@ -61,6 +63,7 @@ Run `npm run build`; the `dist/` folder is the website. Host it on Netlify, Verc
 - `src/components/`: Login, forced password change, modal, shared UI parts
 - `src/lib/live.js`: Supabase backend. `src/lib/demo.js`: browser-only demo backend. Both expose the same API.
 - `supabase/schema.sql`: tables, security rules, and helper functions
+- `supabase/migrations/`: incremental Supabase database migrations
 - `supabase/functions/create-user/`: server function for creating users and resetting passwords
 
 ## Roles

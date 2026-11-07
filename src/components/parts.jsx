@@ -18,7 +18,11 @@ export function TaskList({ tasks, members }) {
   if (!tasks.length) return <div className="empty">No tasks yet</div>;
   return tasks.map((t) => (
     <div key={t.id} className="list-item">
-      <div><b>{t.title}</b><div className="meta">{t.type}{t.repeat_daily ? " · repeats daily" : ""} · {assigneesOf(t).map((id) => nameOf(members, id)).join(", ")} · due {t.due}</div></div>
+      <div>
+        <b>{t.title}</b>
+        {t.description && <div className="task-description task-description-summary">{t.description}</div>}
+        <div className="meta">{t.type}{t.repeat_daily ? " · repeats daily" : ""} · {assigneesOf(t).map((id) => nameOf(members, id)).join(", ")} · due {t.due}</div>
+      </div>
       <Chip cls={isOverdue(t) ? "p-high" : "s-prog"}>{isOverdue(t) ? "Overdue" : t.status}</Chip>
     </div>
   ));

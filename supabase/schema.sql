@@ -20,6 +20,7 @@ create table if not exists profiles (
 create table if not exists tasks (
   id bigint generated always as identity primary key,
   title text not null,
+  description text not null default '',
   type text not null check (type in ('Individual','Group')),
   priority text not null check (priority in ('High','Medium','Low')),
   status text not null default 'To Do' check (status in ('To Do','In Progress','Done')),
@@ -32,6 +33,7 @@ create table if not exists tasks (
 
 alter table tasks add column if not exists repeat_daily boolean not null default false;
 alter table tasks add column if not exists status_date date;
+alter table tasks add column if not exists description text not null default '';
 
 create table if not exists task_assignees (
   task_id bigint references tasks(id) on delete cascade,
@@ -116,6 +118,7 @@ drop policy if exists "tasks: read own or manager" on tasks;
 drop policy if exists "tasks: manager insert" on tasks;
 drop policy if exists "employee_insert_own_task" on tasks;
 drop policy if exists "tasks: manager update" on tasks;
+drop policy if exists "tasks: description update assigned" on tasks;
 drop policy if exists "tasks: manager delete" on tasks;
 drop policy if exists "assignees: read all" on task_assignees;
 drop policy if exists "assignees: manager insert" on task_assignees;
@@ -147,7 +150,19 @@ create policy "employee_insert_own_task" on tasks for insert to authenticated
     and (select is_active_user())
   );
 create policy "tasks: manager update" on tasks for update to authenticated using (is_manager()) with check (is_manager());
+create policy "tasks: description update assigned" on tasks for update to authenticated
+  using (
+    (select is_active_user())
+    and (created_by = (select auth.uid()) or is_assignee(id))
+  )
+  with check (
+    (select is_active_user())
+    and (created_by = (select auth.uid()) or is_assignee(id))
+  );
 create policy "tasks: manager delete" on tasks for delete to authenticated using (is_manager());
+
+revoke update on table public.tasks from anon, authenticated;
+grant update (description) on table public.tasks to authenticated;
 
 create policy "assignees: read all" on task_assignees for select to authenticated using (true);
 create policy "assignees: manager insert" on task_assignees for insert to authenticated with check (is_manager());
